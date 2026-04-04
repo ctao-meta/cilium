@@ -347,7 +347,7 @@ func (n *nodeStore) hasMinimumIPsInPool(localNodeStore *node.LocalNodeStore) (mi
 			minimumReached = true
 		}
 
-		if n.conf.IPAMMode() == ipamOption.IPAMENI || n.conf.IPAMMode() == ipamOption.IPAMAzure || n.conf.IPAMMode() == ipamOption.IPAMAlibabaCloud {
+		if n.conf.IPAMMode() == ipamOption.IPAMAzure || n.conf.IPAMMode() == ipamOption.IPAMAlibabaCloud {
 			if !n.autoDetectIPv4NativeRoutingCIDR(localNodeStore) {
 				minimumReached = false
 			}
@@ -480,14 +480,6 @@ func (n *nodeStore) updateLocalNodeResource(node *ciliumv2.CiliumNode) {
 func (n *nodeStore) setOwnNodeWithoutPoolUpdate(node *ciliumv2.CiliumNode) {
 	n.mutex.Lock()
 	defer n.mutex.Unlock()
-
-	// Do not update to an inconsistent state (see updateLocalNodeResource)
-	if n.conf.IPAMMode() == ipamOption.IPAMENI {
-		if err := validateENIConfig(node); err != nil {
-			n.logger.Info("ENI state is not consistent yet", logfields.Error, err)
-			return
-		}
-	}
 
 	n.ownNode = node
 }
@@ -726,9 +718,6 @@ func (a *crdAllocator) buildAllocationResult(ip net.IP, ipInfo *ipamTypes.Alloca
 	}
 
 	switch a.conf.IPAMMode() {
-
-	case ipamOption.IPAMENI:
-		return buildENIAllocationResult(a.logger, ip, "", a.store.ownNode, a.conf, a.ipMasqAgent)
 
 	// In Azure mode, the Resource points to the azure interface so we can
 	// derive the master interface
