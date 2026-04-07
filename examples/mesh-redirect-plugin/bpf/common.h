@@ -3,17 +3,13 @@
 
 #pragma once
 
-#include <linux/bpf.h>
-#include <linux/if_ether.h>
-#include <linux/ip.h>
-#include <linux/ipv6.h>
-#include <linux/in.h>
-#include <linux/tcp.h>
-#include <linux/udp.h>
+#include <bpf/loader.h>
 #include <bpf/section.h>
 
-#define TC_ACT_OK 0
 #define TC_ACT_UNSPEC (-1)
+
+/* Byte-swap for BPF target (always little-endian) */
+#define MESH_HTONS(x) __builtin_bswap16(x)
 
 /* Mark set by Envoy on forwarded traffic to prevent redirect loops */
 #define ENVOY_MARK 0x539 /* 1337 */

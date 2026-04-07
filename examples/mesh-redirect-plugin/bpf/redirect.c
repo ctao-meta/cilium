@@ -2,6 +2,11 @@
 /* Copyright Authors of Cilium */
 
 #include <bpf/ctx/skb.h>
+#include <linux/byteorder.h>
+#include <linux/if_ether.h>
+#include <linux/ip.h>
+#include <linux/in.h>
+#include <linux/tcp.h>
 #include "common.h"
 
 __section("freplace")
@@ -26,7 +31,7 @@ int before(struct __ctx_buff *ctx)
 		return TC_ACT_UNSPEC;
 
 	/* Only handle IPv4 for now */
-	if (eth->h_proto != __bpf_htons(ETH_P_IP))
+	if (eth->h_proto != MESH_HTONS(ETH_P_IP))
 		return TC_ACT_UNSPEC;
 
 	ip4 = (void *)(eth + 1);
@@ -45,14 +50,14 @@ int before(struct __ctx_buff *ctx)
 	dst_ip = ip4->daddr;
 
 	/* Check if destination pod is mesh-enrolled (INBOUND) */
-	cfg = bpf_map_lookup_elem(&mesh_redirect_map, &dst_ip);
+	cfg = map_lookup_elem(&mesh_redirect_map, &dst_ip);
 	if (cfg) {
 		proxy_port = cfg->inbound_port;
 		goto do_redirect;
 	}
 
 	/* Check if source pod is mesh-enrolled (OUTBOUND) */
-	cfg = bpf_map_lookup_elem(&mesh_redirect_map, &src_ip);
+	cfg = map_lookup_elem(&mesh_redirect_map, &src_ip);
 	if (cfg) {
 		proxy_port = cfg->outbound_port;
 		goto do_redirect;
@@ -82,7 +87,7 @@ do_redirect:
 	/* Step 2: Look for Envoy's LISTEN socket on the proxy port.
 	 * This handles new connections (SYN packets).
 	 */
-	tuple.ipv4.dport = __bpf_htons(proxy_port);
+	tuple.ipv4.dport = MESH_HTONS(proxy_port);
 	sk = sk_lookup_tcp(ctx, &tuple, sizeof(tuple.ipv4),
 			   BPF_F_CURRENT_NETNS, 0);
 	if (!sk)
