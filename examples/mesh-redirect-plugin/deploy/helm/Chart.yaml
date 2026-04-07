@@ -1,0 +1,6 @@
+apiVersion: v2
+name: mesh-redirect-plugin
+description: Cilium datapath plugin for transparent mesh traffic redirection to Envoy
+type: application
+version: 0.0.1
+appVersion: "0.0.1"

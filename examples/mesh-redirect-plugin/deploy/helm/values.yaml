@@ -1,0 +1,4 @@
+image:
+  repository: vmvm-registry.fbinfra.net/index_d/mesh-redirect-plugin
+  tag: latest
+  pullPolicy: IfNotPresent

@@ -1,0 +1,7 @@
+apiVersion: cilium.io/v2alpha1
+kind: CiliumDatapathPlugin
+metadata:
+  name: mesh-redirect
+spec:
+  attachmentPolicy: Always
+  version: 0.0.1

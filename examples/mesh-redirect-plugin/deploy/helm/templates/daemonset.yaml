@@ -1,0 +1,61 @@
+{{- define "cilium.image" -}}
+{{- $digest := (.useDigest | default false) | ternary (printf "@%s" .digest) "" -}}
+{{- $tag := .tag | default "" | eq "" | ternary "" (printf ":%s" .tag) -}}
+{{- if .override -}}
+{{- printf "%s" .override -}}
+{{- else -}}
+{{- printf "%s%s%s" .repository $tag $digest -}}
+{{- end -}}
+{{- end -}}
+
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: mesh-redirect-plugin
+  namespace: kube-system
+  labels:
+    k8s-app: mesh-redirect-plugin
+    app.kubernetes.io/part-of: cilium
+    app.kubernetes.io/name: mesh-redirect-plugin
+spec:
+  selector:
+    matchLabels:
+      k8s-app: mesh-redirect-plugin
+  template:
+    metadata:
+      labels:
+        k8s-app: mesh-redirect-plugin
+        app.kubernetes.io/part-of: cilium
+        app.kubernetes.io/name: mesh-redirect-plugin
+    spec:
+      hostNetwork: true
+      containers:
+      - name: mesh-redirect-plugin
+        image: {{ include "cilium.image" .Values.image | quote }}
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        args:
+        - --unix-socket-path=/var/run/cilium/plugins/mesh-redirect/plugin.sock
+        securityContext:
+          capabilities:
+            drop:
+            - ALL
+            add:
+            # BPF ID -> FD translation requires CAP_SYS_ADMIN.
+            - SYS_ADMIN
+        volumeMounts:
+        - name: state-dir
+          mountPath: /var/run/cilium/plugins/mesh-redirect
+          mountPropagation: HostToContainer
+        - name: bpf-maps
+          mountPath: /sys/fs/bpf
+          mountPropagation: HostToContainer
+      restartPolicy: Always
+      volumes:
+      - name: state-dir
+        hostPath:
+          path: /var/run/cilium/plugins/mesh-redirect
+          type: DirectoryOrCreate
+      - name: bpf-maps
+        hostPath:
+          path: /sys/fs/bpf
+          type: DirectoryOrCreate
