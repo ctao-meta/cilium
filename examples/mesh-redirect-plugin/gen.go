@@ -3,4 +3,4 @@
 
 package main
 
-//go:generate go run github.com/cilium/ebpf/cmd/bpf2go redirect ./bpf/redirect.c
+//go:generate go run github.com/cilium/ebpf/cmd/bpf2go -strip "" redirect ./bpf/redirect.c
