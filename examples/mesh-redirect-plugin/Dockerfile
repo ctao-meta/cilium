@@ -12,6 +12,8 @@ ARG TARGETOS
 ARG TARGETARCH
 ARG MODIFIERS
 
+RUN apt-get update && apt-get install -y --no-install-recommends llvm && rm -rf /var/lib/apt/lists/*
+
 WORKDIR /go/src/github.com/cilium/cilium
 
 RUN --mount=type=bind,readwrite,target=/go/src/github.com/cilium/cilium \
