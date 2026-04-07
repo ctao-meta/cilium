@@ -4,13 +4,19 @@
 # SPDX-License-Identifier: Apache-2.0
 
 ARG BASE_IMAGE=gcr.io/distroless/static:latest@sha256:28efbe90d0b2f2a3ee465cc5b44f3f2cf5533514cf4d51447a977a5dc8e526d0
-ARG CILIUM_BUILDER_IMAGE=quay.io/cilium/cilium-builder:c4e61715e51fc21158aac47df827861c10d42cbb@sha256:057fdc06402c92c747be59dd2bc0ddfe04b3c25b1df7c15ed1c5b0804053487f
+ARG GOLANG_IMAGE=docker.io/library/golang:1.26.1@sha256:e2ddb153f786ee6210bf8c40f7f35490b3ff7d38be70d1a0d358ba64225f6428
 
-FROM --platform=${BUILDPLATFORM} ${CILIUM_BUILDER_IMAGE} AS builder
+FROM --platform=${BUILDPLATFORM} ${GOLANG_IMAGE} AS builder
 
 ARG TARGETOS
 ARG TARGETARCH
 ARG MODIFIERS
+
+# Allow APT to run as root (required at Meta)
+RUN echo 'APT::Sandbox::User "root";' | tee -a /etc/apt/apt.conf.d/10sandbox
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends clang llvm && \
+    rm -rf /var/lib/apt/lists/*
 
 WORKDIR /go/src/github.com/cilium/cilium
 
