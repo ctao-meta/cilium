@@ -13,7 +13,7 @@ PREFIX=/usr/local
 all: image
 
 generate:
-	BPF2GO_CC="$(CLANG)" BPF2GO_CFLAGS="$(MAX_OVERLAY_OPTIONS) $(CLANG_FLAGS)" $(GO) generate .
+	BPF2GO_CC="$(CLANG)" BPF2GO_STRIP="" BPF2GO_CFLAGS="$(MAX_OVERLAY_OPTIONS) $(CLANG_FLAGS)" $(GO) generate .
 
 $(TARGET):
 	$(GO_BUILD) -o $(@) .
